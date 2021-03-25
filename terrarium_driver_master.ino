@@ -15,6 +15,7 @@ unsigned long currentMillis = 0;
 unsigned long previousReportMillis = 0;
 
 bool light_on = false;
+bool uv_on = false;
 float temp0set = 30.0;
 float dim_factor = 0;
 float p_factor = 5.0;
@@ -29,10 +30,7 @@ EasyautomateNetwork client(device_name, api_key, secureClient);
 
 char command_buffer[32];
 
-int diodaPin = D1;
-
 void setup() {
-  pinMode(diodaPin, OUTPUT); 
   Serial.begin(115200);
   Serial.println();
   Serial.print("connecting to ");
@@ -51,7 +49,7 @@ void setup() {
 }
 
 void loop() {
-  delay(4000);
+  delay(60000);
   DynamicJsonDocument root = client.getSettings();
   
   sendSettingsMessage();
@@ -66,7 +64,6 @@ void loop() {
   }
   Serial.println(msg);
 
-
   ind0 = msg.indexOf(',');
   String temp0 = msg.substring(0, ind0);
   ind1 = msg.indexOf(',', ind0+1 );
@@ -75,20 +72,14 @@ void loop() {
   DynamicJsonDocument doc(1024);
   JsonObject device  = doc.createNestedObject("device");
   JsonObject measurements  = device.createNestedObject("measurements");
-  measurements["temp0"] = temp0;
-  measurements["temp1"] = temp1;
+  measurements["t0"] = temp0;
+  measurements["t1"] = temp1;
   device["name"] = device_name;
   serializeJson(doc, Serial);
-  
-//  StaticJsonDocument<200> doc;
-//  String body = "{\"device\":{\"name\":\"kermits_terrarium\", \"measurements\":{\"test\":1}}}";
-//  body += String() + "\"reports\":{" + "t0:20.4,t1:30.3}";
-//  body += "}";
-//  doc["device"] = serialized(body);
-//  serializeJson(doc, Serial);
-//  String output;
-//  serializeJson(doc, output);
-//  client.sendReports(body);
+
+  String output;
+  serializeJson(doc, output);
+  client.sendReports(output);
 }
 
 void decodeJsonObjectSettings(DynamicJsonDocument root){
@@ -105,6 +96,8 @@ void decodeJsonObjectSettings(DynamicJsonDocument root){
           p_factor = lights["p_factor"];
           i_factor = lights["i_factor"];
           d_factor = lights["d_factor"];
+          temp0set = lights["temp0set"];
+          uv_on = lights["uv_on"];
         }
       }
     }
@@ -127,6 +120,8 @@ void sendSettingsMessage()
   msg += String(i_factor);
   msg += ",";
   msg += String(d_factor);
+  msg += ",";
+  msg += uv_on == true ? "1" : "0";
   Serial.println(msg);
   msg.toCharArray(command_buffer, 32);
   Wire.write(command_buffer);
