@@ -24,6 +24,7 @@ float d_factor = 3.0;
 
 int ind0;
 int ind1;
+int ind2;
 
 WiFiClientSecure secureClient;
 EasyautomateNetwork client(device_name, api_key, secureClient);
@@ -55,10 +56,10 @@ void loop() {
   sendSettingsMessage();
   decodeJsonObjectSettings(root);
   String msg;
-  Wire.requestFrom(0x02, 21);    // request 32 bytes from slave device #8
+  Wire.requestFrom(0x02, 21);    // request 21 bytes from slave device #8
   while (Wire.available()) { // slave may send less than requested
     char c = Wire.read(); // receive a byte as character
-    if (isAscii(c)) {  // tests if myChar is an Ascii character to avoid garbage if message is shorter than requested
+    if (isAscii(c)) {  // tests if c is an Ascii character to avoid garbage if message is shorter than requested
       msg += c;
     }    
   }
@@ -67,13 +68,16 @@ void loop() {
   ind0 = msg.indexOf(',');
   String temp0 = msg.substring(0, ind0);
   ind1 = msg.indexOf(',', ind0+1 );
-  String temp1 = msg.substring(ind0+1);
+  String temp1 = msg.substring(ind0+1, ind1);
+  ind2 = msg.indexOf(',', ind1+1);
+  String pid = msg.substring(ind1+1);
 
   DynamicJsonDocument doc(1024);
   JsonObject device  = doc.createNestedObject("device");
   JsonObject measurements  = device.createNestedObject("measurements");
   measurements["t0"] = temp0;
   measurements["t1"] = temp1;
+  measurements["pid"] = pid;
   device["name"] = device_name;
   serializeJson(doc, Serial);
 
