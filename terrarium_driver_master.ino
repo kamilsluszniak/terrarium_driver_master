@@ -1,15 +1,12 @@
 
 #include "credentials.h"
 #include <Wire.h>
-#include <DallasTemperature.h>               //dodaj biblitekę obsługującą DS18B20
 #include "easyautomate_network.h"
 #include <string.h>
-#include <MedianFilter.h>
 #include <ArduinoJson.h>
 
 const char* json_buffer = "";
 const char* device_name = "kermits_terrarium";
-const char* api_key = "DERJIYrs2r9QT2h2b2j3HaUgd490YhPj";
 
 unsigned long currentMillis = 0;
 unsigned long previousReportMillis = 0;
